@@ -206,13 +206,13 @@ def ani_3D_update(i):
     return artists 
 
 def ani_2D_init():
-    COM_traj_ani.set_data(COM_pos_x[0:0], COM_pos_y[0:0])
-    eICP_ani.set_data(eICP_x[0:0], eICP_y[0:0])
-    COM_pos_ani.set_data(COM_pos_x[0], COM_pos_y[0])
-    left_foot_pos_ani.set_data(left_foot_pos_x[0], left_foot_pos_y[0])
-    right_foot_pos_ani.set_data(right_foot_pos_x[0], right_foot_pos_y[0])
-    left_step_command_ani.set_data(left_step_command_x[0], left_step_command_y[0])
-    right_step_command_ani.set_data(right_step_command_x[0], right_step_command_y[0])
+    COM_traj_ani.set_data([COM_pos_x[0:0]], [COM_pos_y[0:0]])
+    eICP_ani.set_data([eICP_x[0:0]], [eICP_y[0:0]])
+    COM_pos_ani.set_data([COM_pos_x[0]], [COM_pos_y[0]])
+    left_foot_pos_ani.set_data([left_foot_pos_x[0]], [left_foot_pos_y[0]])
+    right_foot_pos_ani.set_data([right_foot_pos_x[0]], [right_foot_pos_y[0]])
+    left_step_command_ani.set_data([left_step_command_x[0]], [left_step_command_y[0]])
+    right_step_command_ani.set_data([right_step_command_x[0]], [right_step_command_y[0]])
 
     # Add the circle and wedges to the Axes
     COM_circle_ani.center = (COM_pos_x[0], COM_pos_y[0])
@@ -223,13 +223,13 @@ def ani_2D_init():
             COM_circle_ani, COM_wedge_top_right_ani, COM_wedge_bottom_left_ani, vel_cmd_ani]
 
 def ani_2D_update(i):
-    COM_traj_ani.set_data(COM_pos_x[0:i], COM_pos_y[0:i])
-    eICP_ani.set_data(eICP_x[0:i], eICP_y[0:i])
-    COM_pos_ani.set_data(COM_pos_x[i], COM_pos_y[i])
-    left_foot_pos_ani.set_data(left_foot_pos_x[i], left_foot_pos_y[i])
-    right_foot_pos_ani.set_data(right_foot_pos_x[i], right_foot_pos_y[i])
-    left_step_command_ani.set_data(left_step_command_x[0:i], left_step_command_y[0:i])
-    right_step_command_ani.set_data(right_step_command_x[0:i], right_step_command_y[0:i])
+    COM_traj_ani.set_data([COM_pos_x[0:i]], [COM_pos_y[0:i]])
+    eICP_ani.set_data([eICP_x[0:i]], [eICP_y[0:i]])
+    COM_pos_ani.set_data([COM_pos_x[i]], [COM_pos_y[i]])
+    left_foot_pos_ani.set_data([left_foot_pos_x[i]], [left_foot_pos_y[i]])
+    right_foot_pos_ani.set_data([right_foot_pos_x[i]], [right_foot_pos_y[i]])
+    left_step_command_ani.set_data([left_step_command_x[0:i]], [left_step_command_y[0:i]])
+    right_step_command_ani.set_data([right_step_command_x[0:i]], [right_step_command_y[0:i]])
 
     # ani_text_COM_pos.set_text(COM_pos_str % (COM_pos_x[i], COM_pos_y[i]))
 

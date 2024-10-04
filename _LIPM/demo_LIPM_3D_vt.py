@@ -10,8 +10,13 @@ class Ball:
         self.scatter, = ax.plot([], [], [], shape, markersize=size, animated=False)
 
     def update(self, pos):
+        if len(pos) != 3:
+            raise ValueError("pos must be a sequence of three elements [x, y, z]")
         # draw ball
-        self.scatter.set_data_3d(pos)
+        # print("pos: ",pos)
+        self.scatter.set_data([pos[0]], [pos[1]])
+        self.scatter.set_3d_properties([pos[2]])
+        # self.scatter.set_data_3d(pos)
 
 class Line:
     def __init__(self, size=1, color='g'):
@@ -101,18 +106,18 @@ def ani_3D_update(i):
     return artists 
 
 def ani_2D_init():
-    COM_traj_ani.set_data(COM_pos_x[0:0], COM_pos_y[0:0])
-    COM_pos_ani.set_data(COM_pos_x[0], COM_pos_y[0])
-    left_foot_pos_ani.set_data(left_foot_pos_x[0], left_foot_pos_y[0])
-    right_foot_pos_ani.set_data(right_foot_pos_x[0], right_foot_pos_y[0])
+    COM_traj_ani.set_data([COM_pos_x[0:0]], [COM_pos_y[0:0]])
+    COM_pos_ani.set_data([COM_pos_x[0]], [COM_pos_y[0]])
+    left_foot_pos_ani.set_data([left_foot_pos_x[0]], [left_foot_pos_y[0]])
+    right_foot_pos_ani.set_data([right_foot_pos_x[0]], [right_foot_pos_y[0]])
 
     return [COM_pos_ani, COM_traj_ani, left_foot_pos_ani, right_foot_pos_ani]
 
 def ani_2D_update(i):
-    COM_traj_ani.set_data(COM_pos_x[0:i], COM_pos_y[0:i])
-    COM_pos_ani.set_data(COM_pos_x[i], COM_pos_y[i])
-    left_foot_pos_ani.set_data(left_foot_pos_x[i], left_foot_pos_y[i])
-    right_foot_pos_ani.set_data(right_foot_pos_x[i], right_foot_pos_y[i])
+    COM_traj_ani.set_data([COM_pos_x[0:i]], [COM_pos_y[0:i]])
+    COM_pos_ani.set_data([COM_pos_x[i]], [COM_pos_y[i]])
+    left_foot_pos_ani.set_data([left_foot_pos_x[i]], [left_foot_pos_y[i]])
+    right_foot_pos_ani.set_data([right_foot_pos_x[i]], [right_foot_pos_y[i]])
 
     ani_text_COM_pos.set_text(COM_pos_str % (COM_pos_x[i], COM_pos_y[i]))
 
@@ -232,9 +237,9 @@ COM_dvel = COM_dvel_list[0]
 for i in range(1, int(total_time/LIPM_model.dt)):
 
     # Update body (CoM) state: x_t, vx_t, y_t, vy_t
-    LIPM_model.step()
+    LIPM_model.step() # 更新当前时间步长下的质心（CoM）位置和速度
 
-    if LIPM_model.support_leg == 'left_leg':
+    if LIPM_model.support_leg == 'left_leg': # 根据当前的支撑脚，更新摆动脚的位置。swing_foot_pos 是一个预先计算好的数组，包含了摆动脚在整个步态周期中的位置。
         LIPM_model.right_foot_pos = [swing_foot_pos[j,0], swing_foot_pos[j,1], swing_foot_pos[j,2]]
     else:
         LIPM_model.left_foot_pos = [swing_foot_pos[j,0], swing_foot_pos[j,1], swing_foot_pos[j,2]]
@@ -254,6 +259,8 @@ for i in range(1, int(total_time/LIPM_model.dt)):
     right_foot_pos_y.append(LIPM_model.right_foot_pos[1])
     right_foot_pos_z.append(LIPM_model.right_foot_pos[2])
 
+    # 计算当前和前一个支撑脚的位置，并根据这些位置计算步长和步宽。
+    # theta 是当前步态的方向角，用于将支撑脚的位置旋转到全局坐标系中。
     rsupport_foot_pos_x = np.cos(theta)*support_foot_pos[0] + np.sin(theta)*support_foot_pos[1]
     rsupport_foot_pos_y = -np.sin(theta)*support_foot_pos[0] + np.cos(theta)*support_foot_pos[1]
     rprev_support_foot_pos_x = np.cos(theta)*prev_support_foot_pos[0] + np.sin(theta)*prev_support_foot_pos[1]
@@ -265,12 +272,12 @@ for i in range(1, int(total_time/LIPM_model.dt)):
     dstep_width.append(LIPM_model.w_d)
 
     # switch the support leg
-    if (i % swing_data_len == 0):
+    if (i % swing_data_len == 0): # 每当一个步态周期结束时，切换支撑脚，并更新 CoM 的初始状态
         j = 0
 
         prev_support_foot_pos = support_foot_pos
         # Switch the support leg / Update current body state (self.x_0, self.y_0, self.vx_0, self.vy_0)
-        LIPM_model.switchSupportLeg() 
+        LIPM_model.switchSupportLeg() # 切换支撑脚，并更新 CoM 的初始位置和速度。
         step_num += 1
 
         support_foot_pos = np.array(LIPM_model.support_foot_pos)

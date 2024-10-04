@@ -12,23 +12,23 @@ class LIPM3D:
                  support_leg='left_leg'):
         self.dt = dt
         self.t = 0
-        self.T = T # step time
-        self.T_d = T # desired step duration
-        self.s_d = s_d # desired step length
-        self.w_d = w_d # desired step width
+        self.T = T # step time 步态周期
+        self.T_d = T # desired step duration 期望步态周期时间
+        self.s_d = s_d # desired step length 期望步长
+        self.w_d = w_d # desired step width 期望步宽
 
-        self.eICP_x = 0 # ICP location x
-        self.eICP_y = 0 # ICP location y
-        self.u_x = 0 # step location x
-        self.u_y = 0 # step location y
+        self.eICP_x = 0 # ICP location x ICP位置 x
+        self.eICP_y = 0 # ICP location y ICP位置 y
+        self.u_x = 0 # step location x 步态位置 x
+        self.u_y = 0 # step location y 步态位置 y
 
-        # COM initial state
+        # COM initial state COM初始位置
         self.x_0 = 0
         self.vx_0 = 0
         self.y_0 = 0
         self.vy_0 = 0
 
-        # COM real-time state
+        # COM real-time state 实时状态
         self.x_t = 0
         self.vx_t = 0
         self.y_t = 0
@@ -41,6 +41,7 @@ class LIPM3D:
         self.COM_pos = [0.0, 0.0, 0.0]
     
     def initializeModel(self, COM_pos, left_foot_pos, right_foot_pos):
+        # 初始化了模型的 CoM 位置和支撑脚位置，并计算了摆的自然频率 w_0
         self.COM_pos = COM_pos
 
         if self.support_leg == 'left_leg':
@@ -56,6 +57,7 @@ class LIPM3D:
         self.w_0 = np.sqrt(9.81 / self.zc)
     
     def step(self):
+        # 计算了当前时间步长下 CoM 的位置和速度。它使用了 LIPM 的解析解，其中 cosh 和 sinh 函数用于计算 CoM 的位置和速度
         self.t += self.dt
         t = self.t
 
@@ -66,6 +68,7 @@ class LIPM3D:
         self.vy_t = self.y_0*self.w_0*np.sinh(t*self.w_0) + self.vy_0*np.cosh(t*self.w_0)
 
     def calculateXfVf(self):
+        # 方法计算了步态周期结束时 CoM 的位置和速度。
         x_f = self.x_0*np.cosh(self.T*self.w_0) + self.vx_0*np.sinh(self.T*self.w_0)/self.w_0
         vx_f = self.x_0*self.w_0*np.sinh(self.T*self.w_0) + self.vx_0*np.cosh(self.T*self.w_0)
 
@@ -75,6 +78,8 @@ class LIPM3D:
         return x_f, vx_f, y_f, vy_f
 
     def calculateFootLocationForNextStepXcoMWorld(self, theta=0.):
+        # 计算了下一步的位置。它首先计算 CoM 在步态周期结束时的位置和速度，然后计算期望的捕获点（eICP）。
+        # 接着，它计算步态位置的偏移量，并将其应用于 eICP 以确定下一步的位置
         x_f, vx_f, y_f, vy_f = self.calculateXfVf()
         x_f_world = x_f + self.support_foot_pos[0]
         y_f_world = y_f + self.support_foot_pos[1]
@@ -109,6 +114,7 @@ class LIPM3D:
         self.u_y = self.eICP_y + offset_y
 
     def switchSupportLeg(self):
+        # 在步态周期结束时切换支撑脚，并更新 CoM 的初始状态。
         if self.support_leg == 'left_leg':
             print('\n---- switch the support leg to the right leg')
             self.support_leg = 'right_leg'
