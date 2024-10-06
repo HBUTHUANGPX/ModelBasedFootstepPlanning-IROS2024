@@ -65,14 +65,14 @@ def play(args):
     env_cfg.commands.ranges.lin_vel_y = 0. # 0., 1.
     env_cfg.commands.ranges.yaw_vel = 0. # 0., 1.
 
-    if env_cfg.__class__.__name__ == 'PaiControllerCfg':
+    if env_cfg.__class__.__name__ == 'Hicl12ControllerCfg':
         env_cfg.commands.adjust_step_command = False # True, False
         env_cfg.commands.adjust_prob = 0.05
         env_cfg.commands.sample_angle_offset = 20
         env_cfg.commands.sample_radius_offset = 0.05 # 0.05
 
-        env_cfg.commands.ranges.sample_period = [35, 36]  # [20, 21], [35, 36]
-        env_cfg.commands.ranges.dstep_width = [0.05, 0.05]
+        env_cfg.commands.ranges.sample_period = [30, 40]  # [20, 21], [35, 36]
+        env_cfg.commands.ranges.dstep_width = [0.1, 0.1]
 
     # * prepare environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
@@ -132,11 +132,13 @@ def play(args):
         if CUSTOM_COMMANDS:
             # * Scenario 1 (For flat terrain)
             if (i+1) == 500:
-                env.commands[:, 0] = 0.5
+                env.commands[:, 0] = 0.3
                 env.commands[:, 1] = 0.
+                print("env.commands[:, 0] = 0.5")
             elif (i+1) == 1000: 
-                env.commands[:, 0] = 1.0
+                env.commands[:, 0] = 0.6
                 env.commands[:, 1] = 0.
+                print("env.commands[:, 0] = 1.0")
 
         if MOVE_CAMERA and not env.headless:
             camera_position += camera_vel * env.dt
@@ -202,7 +204,7 @@ if __name__ == '__main__':
     CUSTOM_COMMANDS = True # True, False
     MOVE_CAMERA = False # True, False
     LIVE_PLOT = False # True, False
-    RECORD_FRAMES = False # True, False
+    RECORD_FRAMES = True # True, False
     SAVE_CSV = False # True, False
     SAVE_DICT = False # True, False
     CHECK_SUCCESS_RATE = False # True, False

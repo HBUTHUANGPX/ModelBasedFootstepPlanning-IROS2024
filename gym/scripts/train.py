@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
@@ -41,26 +41,42 @@ from gym.utils.logging_and_saving import local_code_save_helper, wandb_singleton
 
 import wandb
 
+
 def train(args):
     # * Setup environment and policy_runner
     env, env_cfg = task_registry.make_env(name=args.task, args=args)
 
-    policy_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args)
+    policy_runner, train_cfg = task_registry.make_alg_runner(
+        env=env, name=args.task, args=args
+    )
 
     # * Setup wandb
     wandb_helper = wandb_singleton.WandbSingleton()
-    wandb_helper.setup_wandb(env_cfg=env_cfg, train_cfg=train_cfg, args=args, log_dir=policy_runner.log_dir)
-    local_code_save_helper.log_and_save(
-        env, env_cfg, train_cfg, policy_runner)
+    wandb_helper.setup_wandb(
+        env_cfg=env_cfg,
+        train_cfg=train_cfg,
+        args=args,
+        log_dir=policy_runner.log_dir,
+        is_sweep=True,
+    )
+    local_code_save_helper.log_and_save(env, env_cfg, train_cfg, policy_runner)
     wandb_helper.attach_runner(policy_runner=policy_runner)
 
     # * Train
-    policy_runner.learn(num_learning_iterations=train_cfg.runner.max_iterations, 
-                        init_at_random_ep_len=True)
-    
+    policy_runner.learn(
+        num_learning_iterations=train_cfg.runner.max_iterations,
+        init_at_random_ep_len=True,
+    )
+
     # * Close wandb
     wandb_helper.close_wandb()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     args = get_args()
+    print("WandB Project:", args.wandb_project)
+    print("WandB Entity:", args.wandb_entity)
+    print("WandB Sweep ID:", args.wandb_sweep_id)
+    print("WandB Sweep Config:", args.wandb_sweep_config)
+    print("Disable WandB:", args.disable_wandb)
     train(args)

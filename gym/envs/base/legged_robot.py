@@ -48,7 +48,12 @@ from gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
 from gym.utils import KeyboardInterface
 torch.set_printoptions(precision=4, sci_mode=False, linewidth=500, threshold=20000000)
-
+def get_euler_xyz_tensor(quat):
+    r, p, w = get_euler_xyz(quat)
+    # stack r, p, w in dim1
+    euler_xyz = torch.stack((r, p, w), dim=1)
+    euler_xyz[euler_xyz > np.pi] -= 2 * np.pi
+    return euler_xyz
 class LeggedRobot(BaseTask):
     
     def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless):
@@ -130,7 +135,7 @@ class LeggedRobot(BaseTask):
         self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         # print("self.gravity_vec: ",self.gravity_vec)
         self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
-
+        self.base_euler_xyz = get_euler_xyz_tensor(self.base_quat)
         self._post_physics_step_callback() 
 
         self.check_termination()
@@ -558,6 +563,7 @@ class LeggedRobot(BaseTask):
         self.dof_vel = self.dof_state.view(self.num_envs, self.num_dof, 2)[..., 1]
         self.base_pos = self.root_states[:, 0:3]
         self.base_quat = self.root_states[:, 3:7]
+        self.base_euler_xyz = get_euler_xyz_tensor(self.base_quat)
         self.contact_forces = gymtorch.wrap_tensor(net_contact_forces).view(self.num_envs, -1, 3) # shape: num_envs, num_bodies, xyz axis
 
         # initialize some data used later on
@@ -737,8 +743,8 @@ class LeggedRobot(BaseTask):
         self.num_dof = self.gym.get_asset_dof_count(robot_asset)
         self.num_bodies = self.gym.get_asset_rigid_body_count(robot_asset)
         dof_props_asset = self.gym.get_asset_dof_properties(robot_asset)
-        print(self.cfg.asset.rotor_inertia)
-        print(dof_props_asset["armature"])
+        # print(self.cfg.asset.rotor_inertia)
+        # print(dof_props_asset["armature"])
         dof_props_asset["armature"] = self.cfg.asset.rotor_inertia
         dof_props_asset["damping"] = self.cfg.asset.angular_damping
         rigid_shape_props_asset = self.gym.get_asset_rigid_shape_properties(robot_asset)
@@ -761,10 +767,10 @@ class LeggedRobot(BaseTask):
         self.base_init_state = to_torch(base_init_state_list, device=self.device, requires_grad=False)
         start_pose = gymapi.Transform()
         start_pose.p = gymapi.Vec3(*self.base_init_state[:3])
-        print("============")
-        print(self.cfg.init_state.pos)
-        print(start_pose.p)
-        print(self.base_init_state)
+        # print("============")
+        # print(self.cfg.init_state.pos)
+        # print(start_pose.p)
+        # print(self.base_init_state)
         
         self._get_env_origins()
         env_lower = gymapi.Vec3(0., 0., 0.)
@@ -778,7 +784,7 @@ class LeggedRobot(BaseTask):
             pos = self.env_origins[i].clone()
             pos[:2] += torch_rand_float(-1., 1., (2,1), device=self.device).squeeze(1)
             start_pose.p = gymapi.Vec3(*pos)
-            print(start_pose.p)
+            # print(start_pose.p)
             rigid_shape_props = self._process_rigid_shape_props(rigid_shape_props_asset, i)
             self.gym.set_asset_rigid_shape_properties(robot_asset, rigid_shape_props)
             legged_robot_handle = self.gym.create_actor(env_handle, robot_asset, start_pose, "legged_robot", i, self.cfg.asset.self_collisions, 0)

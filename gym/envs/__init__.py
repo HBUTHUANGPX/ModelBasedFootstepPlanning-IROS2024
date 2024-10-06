@@ -52,6 +52,12 @@ from .pai02.pai02_controller_config import Pai02ControllerCfg, Pai02ControllerRu
 from .hi01.hi01_controller import Hi01Controller
 from .hi01.hi01_controller_config import Hi01ControllerCfg, Hi01ControllerRunnerCfg
 
+from .hi_cl.hi_cl_controller import HiclController
+from .hi_cl.hi_cl_controller_config import HiclControllerCfg, HiclControllerRunnerCfg
+
+from .hi_cl_12.hi_cl12_controller import Hicl12Controller
+from .hi_cl_12.hi_cl12_controller_config import Hicl12ControllerCfg, Hicl12ControllerRunnerCfg
+
 from gym.utils.task_registry import task_registry
 
 # task_registry.register("pendulum", Pendulum, PendulumCfg, PendulumRunnerCfg)
@@ -63,5 +69,7 @@ task_registry.register("humanoid_controller", HumanoidController, HumanoidContro
 task_registry.register("pai_controller", PaiController, PaiControllerCfg, PaiControllerRunnerCfg)
 task_registry.register("pai02_controller", Pai02Controller, Pai02ControllerCfg, Pai02ControllerRunnerCfg)
 task_registry.register("hi01_controller", Hi01Controller, Hi01ControllerCfg, Hi01ControllerRunnerCfg)
+task_registry.register("hicl_controller", HiclController, HiclControllerCfg, HiclControllerRunnerCfg)
+task_registry.register("hicl12_controller", Hicl12Controller, Hicl12ControllerCfg, Hicl12ControllerRunnerCfg)
                       
 

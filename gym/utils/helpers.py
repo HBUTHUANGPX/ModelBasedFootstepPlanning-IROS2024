@@ -162,7 +162,7 @@ def update_cfg_from_args(env_cfg, train_cfg, args):
 
 def get_args():
     custom_parameters = [
-        {"name": "--task", "type": str, "default": "humanoid_controller", "help": "Resume training or start testing from a checkpoint. Overrides config file if provided."},
+        {"name": "--task", "type": str, "default": "hicl12_controller", "help": "Resume training or start testing from a checkpoint. Overrides config file if provided."},
         # {"name": "--task", "type": str, "default": "pai02_controller", "help": "Resume training or start testing from a checkpoint. Overrides config file if provided."},
         {"name": "--resume", "action": "store_true", "default": False,  "help": "Resume training from a checkpoint"},
         {"name": "--experiment_name", "type": str,  "help": "Name of the experiment to run or load. Overrides config file if provided."},

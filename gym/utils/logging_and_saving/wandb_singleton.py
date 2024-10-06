@@ -38,7 +38,7 @@ class WandbSingleton(object):
         # assume WandB is off if entity or project is None and short-circuit
         if args.task is not None:
             self.experiment_name = f'{args.task}'
-
+        print('args.disable_wandb:',args.disable_wandb)
         if (self.entity_name is None or self.project_name is None
            or args.disable_wandb):
             self.enabled = False
@@ -79,8 +79,10 @@ class WandbSingleton(object):
         return self.project_name
 
     def setup_wandb(self, env_cfg, train_cfg, args, log_dir, is_sweep=False):
+        self.is_sweep = is_sweep
         self.set_wandb_values(train_cfg, args)
-
+        if is_sweep:
+            self.enabled = True
         # short-circuit if the values say WandB is turned off
         if not self.is_wandb_enabled():
             print('WARNING: WandB is disabled and will not save or log.')
