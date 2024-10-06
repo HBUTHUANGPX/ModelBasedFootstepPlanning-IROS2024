@@ -938,10 +938,10 @@ class Hicl12Controller(LeggedRobot):
 
         # Yaw joints regularization around 0
         error += self._negsqrd_exp((self.dof_pos[:, 2]) / self.scales["dof_pos"])
-        error += self._negsqrd_exp((self.dof_pos[:, 8]) / self.scales["dof_pos"])
+        # error += self._negsqrd_exp((self.dof_pos[:, 8]) / self.scales["dof_pos"])
 
         error += self._negsqrd_exp((self.dof_pos[:, 5]) / self.scales["dof_pos"])
-        error += self._negsqrd_exp((self.dof_pos[:, 11]) / self.scales["dof_pos"])
+        # error += self._negsqrd_exp((self.dof_pos[:, 11]) / self.scales["dof_pos"])
 
         return error / 4
 

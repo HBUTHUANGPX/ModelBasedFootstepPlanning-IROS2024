@@ -142,7 +142,7 @@ class Hicl12ControllerCfg(LeggedRobotCfg):
 
         actuation_scale = 1.0
         exp_avg_decay = None
-        decimation = 20
+        decimation = 10
 
     class commands(LeggedRobotCfg.commands):
         curriculum = False
@@ -165,7 +165,7 @@ class Hicl12ControllerCfg(LeggedRobotCfg):
             sample_period = [30, 50]  # [20, 21] # equal to gait frequency
             dstep_width = [0.1, 0.1]  # [0.2, 0.4] # min max [m]
 
-            lin_vel_x = [-0.6, 0.6]  # [-3.0, 3.0] # min max [m/s]
+            lin_vel_x = [-1.0, 1.0]  # [-3.0, 3.0] # min max [m/s]
             lin_vel_y = 0.6  # 1.5   # min max [m/s]
             yaw_vel = 0.0  # min max [rad/s]
 
@@ -363,7 +363,7 @@ class Hicl12ControllerRunnerCfg(LeggedRobotRunnerCfg):
         policy_class_name = "ActorCritic"
         algorithm_class_name = "PPO"
         num_steps_per_env = 24
-        max_iterations = 10000
+        max_iterations = 20000
         run_name = "sf"
         experiment_name = "Hicl12_Controller"
         save_interval = 100
