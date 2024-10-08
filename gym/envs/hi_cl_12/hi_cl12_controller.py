@@ -33,12 +33,15 @@ from .jacobian import apply_coupling
 from scipy.signal import correlate
 import torch.nn.functional as F
 
+
 def get_euler_xyz_tensor(quat):
     r, p, w = get_euler_xyz(quat)
     # stack r, p, w in dim1
     euler_xyz = torch.stack((r, p, w), dim=1)
     euler_xyz[euler_xyz > np.pi] -= 2 * np.pi
     return euler_xyz
+
+
 class Hicl12Controller(LeggedRobot):
     cfg: Hicl12ControllerCfg
 
@@ -543,7 +546,7 @@ class Hicl12Controller(LeggedRobot):
     def _update_commands(self):
         # print("_update_commands")
         """Update step commands"""
-        # * Check env ids to update phase
+        # * Check env ids to update phase(freq*2)
         self.update_phase_ids = self.phase_count >= self.full_step_period.squeeze(1)
         self.phase_count[self.update_phase_ids] = 0
         self.phase[self.update_phase_ids] = 0
@@ -908,7 +911,7 @@ class Hicl12Controller(LeggedRobot):
             torch.abs(self.cfg.rewards.base_height_target - self.base_height)
             - self.cfg.rewards.base_height_range
         ).flatten()
-        return self._negsqrd_exp(error)
+        return self._negsqrd_exp(torch.clamp(error, 0))
 
     def _reward_base_heading(self):
         # Reward tracking desired base heading
@@ -937,13 +940,13 @@ class Hicl12Controller(LeggedRobot):
         error = 0.0
 
         # Yaw joints regularization around 0
-        error += self._negsqrd_exp((self.dof_pos[:, 2]) / self.scales["dof_pos"])
+        error += self._negsqrd_exp((self.dof_pos[:, 2]) / self.scales["dof_pos"],0.1)
         # error += self._negsqrd_exp((self.dof_pos[:, 8]) / self.scales["dof_pos"])
 
-        error += self._negsqrd_exp((self.dof_pos[:, 5]) / self.scales["dof_pos"])
+        error += self._negsqrd_exp((self.dof_pos[:, 5]) / self.scales["dof_pos"],0.1)
         # error += self._negsqrd_exp((self.dof_pos[:, 11]) / self.scales["dof_pos"])
 
-        return error / 4
+        return error / 2
 
     def _reward_contact_schedule(self):
         """Alternate right and left foot contacts
@@ -965,7 +968,10 @@ class Hicl12Controller(LeggedRobot):
         计算指定link间的距离（x和y方向的距离）作为奖励。这样做可以让腿尽可能的打开
         Calculates the reward based on the distance between the feet. Penilize feet get close to each other or too far away.
         """
-        foot_pos = self.rigid_body_state[:, self.feet_ids, :2]
+        foot_pos = (
+            self.rigid_body_state[:, self.feet_ids, :2]
+            + self.rigid_body_state[:, self.feet_ids-1, :2]
+        ) / 2
         foot_dist = torch.norm(foot_pos[:, 0, :] - foot_pos[:, 1, :], dim=1)
         fd = self.cfg.rewards.min_dist_feet
         max_df = self.cfg.rewards.max_dist_feet
@@ -988,7 +994,7 @@ class Hicl12Controller(LeggedRobot):
         )
         # print(nn.size())
         return rew
-    
+
     def _reward_ankle_roll_posture_pitch(self):
         feet_eular_0 = get_euler_xyz_tensor(
             self.rigid_body_state[:, self.feet_ids[0], 3:7]
@@ -1002,6 +1008,7 @@ class Hicl12Controller(LeggedRobot):
         )
         # print(nn.size())
         return rew
+
     # ##################### HELPER FUNCTIONS ################################## #
 
     def smooth_sqr_wave(self, phase):

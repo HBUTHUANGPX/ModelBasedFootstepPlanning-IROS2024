@@ -1,0 +1,69 @@
+pai_cl_12_240823:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 1000
+
+  # L Controllers ---------------------------------------
+  l_hip_pitch_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: l_hip_pitch_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  l_hip_roll_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: l_hip_roll_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  l_thigh_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: l_thigh_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  l_calf_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: l_calf_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  l_ankle_pitch_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: l_ankle_pitch_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  l_ankle_roll_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: l_ankle_roll_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  # R Controllers ---------------------------------------
+  r_hip_pitch_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: r_hip_pitch_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  r_hip_roll_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: r_hip_roll_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  r_thigh_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: r_thigh_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  r_calf_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: r_calf_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  r_ankle_pitch_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: r_ankle_pitch_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+  r_ankle_roll_controller:
+    type: unitree_legged_control/UnitreeJointController
+    joint: r_ankle_roll_joint
+    pid: {p: 300.0, i: 0.0, d: 8.0}
+
+

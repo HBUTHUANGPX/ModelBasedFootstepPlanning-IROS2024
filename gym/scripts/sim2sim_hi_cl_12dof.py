@@ -46,8 +46,8 @@ import os
 
 class cmd:
     vx = 0.8
-    vy = 0.0
-    dyaw = 0.0
+    vy = 0.
+    dyaw = 0
 
 
 def quaternion_to_euler_array(quat):
@@ -171,7 +171,10 @@ def run_mujoco(policy, cfg:Hicl12ControllerCfg):
                 "sim2sim_target_dof_pos_11",
             ]
         )
-
+        
+        phase = 0
+        step_period = cfg.commands.ranges.sample_period[0]
+        
         for _ in tqdm(
             range(int(cfg.sim_config.sim_duration / cfg.sim_config.dt)),
             desc="Simulating...",
@@ -196,28 +199,6 @@ def run_mujoco(policy, cfg:Hicl12ControllerCfg):
                 eu_ang = quaternion_to_euler_array(quat)
                 eu_ang[eu_ang > math.pi] -= 2 * math.pi
 
-                # # base_heading
-                # obs[0, 0] = eu_ang[2] 
-                # # base_ang_vel
-                # obs[0, 1:4] = omega * cfg.scaling.base_ang_vel
-                # # projected_gravity
-                # obs[0, 4:7] = gvec * cfg.scaling.projected_gravity
-                # # commands
-                # obs[0, 7] = cmd.vx * cfg.scaling.commands
-                # obs[0, 8] = cmd.vy * cfg.scaling.commands
-                # obs[0, 9] = cmd.dyaw * cfg.scaling.commands
-                # # phase_sin
-                # obs[0, 10] = math.sin(
-                #     2 * math.pi * count_lowlevel * cfg.sim_config.dt / 0.5
-                # )
-                # # phase_cos
-                # obs[0, 11] = math.cos(
-                #     2 * math.pi * count_lowlevel * cfg.sim_config.dt / 0.5
-                # )
-                # # dof_pos
-                # obs[0, 12:24] = q * cfg.scaling.dof_pos
-                # # dof_vel
-                # obs[0, 24:36] = dq * cfg.scaling.dof_vel
                 """
                 obs[0, 0] = math.sin(
                     2 * math.pi * count_lowlevel * cfg.sim_config.dt / 0.64
@@ -235,12 +216,13 @@ def run_mujoco(policy, cfg:Hicl12ControllerCfg):
                 obs[0, 44:47] = eu_ang
                 """
                 
-                
+                full_step_period = step_period * 2
+                phase += 1/full_step_period
                 obs[0, 0] = math.sin(
-                    2 * math.pi * count_lowlevel * cfg.sim_config.dt / 0.5
+                    2 * math.pi * phase
                 )
                 obs[0, 1] = math.cos(
-                    2 * math.pi * count_lowlevel * cfg.sim_config.dt / 0.5
+                    2 * math.pi * phase
                 )
                 obs[0, 2] = cmd.vx * cfg.scaling.commands
                 obs[0, 3] = cmd.vy * cfg.scaling.commands
@@ -339,7 +321,7 @@ if __name__ == "__main__":
             kps = np.ones(12, dtype=np.double) * 40
             kds = np.ones(12, dtype=np.double) * 1.0
             print(kds)
-            tau_limit = 80.0 * np.ones(12, dtype=np.double)
+            tau_limit = 36.0 * np.ones(12, dtype=np.double)
 
     policy = torch.jit.load(args.load_model)
     run_mujoco(policy, Sim2simCfg())

@@ -162,7 +162,7 @@ class Hicl12ControllerCfg(LeggedRobotCfg):
 
         class ranges(LeggedRobotCfg.commands.ranges):
             # TRAINING STEP COMMAND RANGES #
-            sample_period = [30, 50]  # [20, 21] # equal to gait frequency
+            sample_period = [35, 36]  # [20, 21] # equal to gait frequency
             dstep_width = [0.1, 0.1]  # [0.2, 0.4] # min max [m]
 
             lin_vel_x = [-1.0, 1.0]  # [-3.0, 3.0] # min max [m/s]
@@ -230,7 +230,7 @@ class Hicl12ControllerCfg(LeggedRobotCfg):
         apply_humanoid_jacobian = False  # True, False
 
     class rewards(LeggedRobotCfg.rewards):
-        base_height_target = 0.68
+        base_height_target = 0.66
         base_height_range = 0.025
         soft_dof_pos_limit = 0.9
         soft_dof_vel_limit = 0.9
@@ -260,12 +260,12 @@ class Hicl12ControllerCfg(LeggedRobotCfg):
             tracking_lin_vel_world = 4.0
 
             # * Stepping rewards * #
-            joint_regularization = 1.0
+            joint_regularization = 5.0
             contact_schedule = 3.0
 
             # * Other * #
-            feet_distance = 0.16
-            ankle_roll_posture_roll = 10.0
+            feet_distance = 1.0
+            ankle_roll_posture_roll = 4.0
             ankle_roll_posture_pitch = 0.5
         class termination_weights(LeggedRobotCfg.rewards.termination_weights):
             termination = 1.0
