@@ -158,14 +158,14 @@ class Hicl12ControllerCfg(LeggedRobotCfg):
         sample_radius_offset = 0.05
 
         dstep_length = 0.2
-        dstep_width = 0.1
+        dstep_width = 0.05
 
         class ranges(LeggedRobotCfg.commands.ranges):
             # TRAINING STEP COMMAND RANGES #
-            sample_period = [35, 36]  # [20, 21] # equal to gait frequency
-            dstep_width = [0.1, 0.1]  # [0.2, 0.4] # min max [m]
+            sample_period = [25, 26]  # [20, 21] # equal to gait frequency
+            dstep_width = [0.05, 0.05]  # [0.2, 0.4] # min max [m]
 
-            lin_vel_x = [-1.0, 1.0]  # [-3.0, 3.0] # min max [m/s]
+            lin_vel_x = [-1.5, 1.5]  # [-3.0, 3.0] # min max [m/s]
             lin_vel_y = 0.6  # 1.5   # min max [m/s]
             yaw_vel = 0.0  # min max [rad/s]
 
@@ -260,7 +260,7 @@ class Hicl12ControllerCfg(LeggedRobotCfg):
             tracking_lin_vel_world = 4.0
 
             # * Stepping rewards * #
-            joint_regularization = 5.0
+            joint_regularization = 3.0
             contact_schedule = 3.0
 
             # * Other * #

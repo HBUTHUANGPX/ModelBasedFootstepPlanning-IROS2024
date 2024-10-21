@@ -173,7 +173,7 @@ def run_mujoco(policy, cfg:Hicl12ControllerCfg):
         )
         
         phase = 0
-        step_period = cfg.commands.ranges.sample_period[0]
+        step_period = 15#cfg.commands.ranges.sample_period[0]
         
         for _ in tqdm(
             range(int(cfg.sim_config.sim_duration / cfg.sim_config.dt)),
@@ -318,7 +318,7 @@ if __name__ == "__main__":
             decimation = 10
 
         class robot_config:
-            kps = np.ones(12, dtype=np.double) * 40
+            kps = np.ones(12, dtype=np.double) * 30
             kds = np.ones(12, dtype=np.double) * 1.0
             print(kds)
             tau_limit = 36.0 * np.ones(12, dtype=np.double)

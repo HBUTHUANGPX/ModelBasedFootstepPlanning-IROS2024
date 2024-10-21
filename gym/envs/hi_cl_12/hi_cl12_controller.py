@@ -938,15 +938,17 @@ class Hicl12Controller(LeggedRobot):
     def _reward_joint_regularization(self):
         # Reward joint poses and symmetry
         error = 0.0
-
+        indices = [0, 1, 2, 3, 4, 5]
         # Yaw joints regularization around 0
-        error += self._negsqrd_exp((self.dof_pos[:, 2]) / self.scales["dof_pos"],0.1)
+        error += self._negsqrd_exp((self.dof_pos[:, 1]) / self.scales["dof_pos"],0.1)
+        error += self._negsqrd_exp((self.dof_pos[:, 2]) / self.scales["dof_pos"], 0.1)
         # error += self._negsqrd_exp((self.dof_pos[:, 8]) / self.scales["dof_pos"])
 
-        error += self._negsqrd_exp((self.dof_pos[:, 5]) / self.scales["dof_pos"],0.1)
+        error += self._negsqrd_exp((self.dof_pos[:, 7]) / self.scales["dof_pos"],0.1)
+        error += self._negsqrd_exp((self.dof_pos[:, 8]) / self.scales["dof_pos"], 0.1)
         # error += self._negsqrd_exp((self.dof_pos[:, 11]) / self.scales["dof_pos"])
 
-        return error / 2
+        return error / 4
 
     def _reward_contact_schedule(self):
         """Alternate right and left foot contacts
@@ -970,7 +972,7 @@ class Hicl12Controller(LeggedRobot):
         """
         foot_pos = (
             self.rigid_body_state[:, self.feet_ids, :2]
-            + self.rigid_body_state[:, self.feet_ids-1, :2]
+            + self.rigid_body_state[:, self.feet_ids - 1, :2]
         ) / 2
         foot_dist = torch.norm(foot_pos[:, 0, :] - foot_pos[:, 1, :], dim=1)
         fd = self.cfg.rewards.min_dist_feet
