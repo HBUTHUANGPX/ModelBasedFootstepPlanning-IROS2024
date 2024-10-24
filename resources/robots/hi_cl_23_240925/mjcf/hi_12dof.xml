@@ -11,7 +11,7 @@
 	<default>
 		<joint limited="true" />
 		<motor ctrllimited="true" />
-		<geom condim="4" contype="1" conaffinity="15" solref="0.001 2" friction="0.9 0.9 0.9" />
+		<geom condim="4" contype="1" conaffinity="15" solref="0.001 2" friction="0.9 0.2 0.2" />
 		<equality solref="0.001 2" />
 		<default class="visualgeom">
 			<geom material="visualgeom" condim="1" contype="0" conaffinity="0" />

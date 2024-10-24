@@ -829,65 +829,20 @@ class Hicl12Controller(LeggedRobot):
             self.contact_forces[:, self.termination_contact_indices, :], dim=-1
         )
         self.terminated = torch.any((term_contact > 1.0), dim=1)
-        # print(
-        #     "term_contact: ",
-        #     torch.sum(
-        #         torch.any((term_contact > 1.0), dim=1)
-        #     ).item(),
-        # )
         # * Termination for velocities, orientation, and low height
         self.terminated |= torch.any(
             torch.norm(self.base_lin_vel, dim=-1, keepdim=True) > 15.0, dim=1
         )
-        # print(
-        #     "self.base_lin_vel: ",
-        #     torch.sum(
-        #         torch.any(
-        #             torch.norm(self.base_lin_vel, dim=-1, keepdim=True) > 15.0, dim=1
-        #         )
-        #     ).item(),
-        # )
         self.terminated |= torch.any(
             torch.norm(self.base_ang_vel, dim=-1, keepdim=True) > 15.0, dim=1
         )
-        # print(
-        #     "self.base_ang_vel: ",
-        #     torch.sum(
-        #         torch.any(
-        #             torch.norm(self.base_ang_vel, dim=-1, keepdim=True) > 15.0, dim=1
-        #         )
-        #     ).item(),
-        # )
-        # print("self.base_ang_vel: ",torch.norm(self.base_ang_vel, dim=-1, keepdim=True))
         self.terminated |= torch.any(
             torch.abs(self.projected_gravity[:, 0:1]) > 0.9, dim=1
         )
-        # print(
-        #     "self.projected_gravity: ",
-        #     torch.sum(
-        #         torch.any(torch.abs(self.projected_gravity[:, 0:1]) > 0.9, dim=1)
-        #     ).item(),
-        # )
-
         self.terminated |= torch.any(
             torch.abs(self.projected_gravity[:, 1:2]) > 0.9, dim=1
         )
-        # print(
-        #     "self.projected_gravity: ",
-        #     torch.sum(
-        #         torch.any(torch.abs(self.projected_gravity[:, 1:2]) > 0.9, dim=1)
-        #     ).item(),
-        # )
-
         self.terminated |= torch.any(self.base_pos[:, 2:3] < 0.3, dim=1)
-        # print(
-        #     "self.base_pos: ",
-        #     torch.sum(torch.any(self.base_pos[:, 2:3] < 0.3, dim=1)).item(),
-        # )
-        # print(
-        #     "self.terminated: ",
-        #     torch.sum(self.terminated).item(),
-        # )
         # * No terminal reward for time-outs
         self.timed_out = self.episode_length_buf > self.max_episode_length
         # print(
