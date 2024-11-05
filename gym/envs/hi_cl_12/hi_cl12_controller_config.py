@@ -298,7 +298,7 @@ class Hicl12ControllerRunnerCfg(LeggedRobotRunnerCfg):
         activation = "elu"
         normalize_obs = True  # True, False
 
-        actor_obs = [
+        single_actor_obs = [
             "phase_sin",
             "phase_cos",
             "commands",
@@ -307,7 +307,15 @@ class Hicl12ControllerRunnerCfg(LeggedRobotRunnerCfg):
             "base_ang_vel",
             "base_euler_xyz",
         ]
-
+        actor_obs = [
+            "phase_sin",
+            "phase_cos",
+            "commands",
+            "dof_pos",
+            "dof_vel",
+            "base_ang_vel",
+            "base_euler_xyz",
+        ]*(15)
         critic_obs = [
             "base_height",
             "base_lin_vel_world",  # "base_lin_vel",

@@ -26,7 +26,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Copyright (c) 2021 ETH Zurich, Nikita Rudin
+# Copyright (c) 2021 ETH Zurich, Nikita Rudin MIT
 
 import time
 import os
@@ -53,6 +53,9 @@ class OnPolicyRunner:
         self.device = device
         self.env = env
 
+        self.num_actor_single_obs = self.get_obs_size(
+            self.policy_cfg["single_actor_obs"]
+        )
         self.num_actor_obs = self.get_obs_size(self.policy_cfg["actor_obs"])
         self.num_critic_obs = self.get_obs_size(self.policy_cfg["critic_obs"])
         self.num_actions = self.get_action_size(self.policy_cfg["actions"])
@@ -60,7 +63,11 @@ class OnPolicyRunner:
             self.policy_cfg["actor_obs"], self.policy_cfg["noise"]
         )
         actor_critic = ActorCritic(
-            self.num_actor_obs, self.num_critic_obs, self.num_actions, **self.policy_cfg
+            self.num_actor_obs,
+            self.num_critic_obs,
+            self.num_actor_single_obs,
+            self.num_actions,
+            **self.policy_cfg,
         ).to(self.device)
 
         alg_class = eval(self.cfg["algorithm_class_name"])  # PPO
@@ -146,6 +153,16 @@ class OnPolicyRunner:
                     # critic_obs = self.get_noisy_obs(self.policy_cfg["critic_obs"])
                     critic_obs = self.get_obs(self.policy_cfg["critic_obs"])
 
+                    termination_ids = termination_ids.to(self.device)
+                    termination_privileged_obs = termination_privileged_obs.to(
+                        self.device
+                    )
+
+                    next_critic_obs = critic_obs.clone().detach()
+                    next_critic_obs[termination_ids] = (
+                        termination_privileged_obs.clone().detach()
+                    )
+
                     self.alg.process_env_step(rewards, dones, timed_out)
 
                     # * Book keeping
@@ -169,7 +186,12 @@ class OnPolicyRunner:
                 start = stop
                 self.alg.compute_returns(critic_obs)
 
-            mean_value_loss, mean_surrogate_loss = self.alg.update()
+            (
+                mean_value_loss,
+                mean_surrogate_loss,
+                mean_estimation_loss,
+                mean_swap_loss,
+            ) = self.alg.update()
             stop = time.time()
             learn_time = stop - start
 
@@ -347,33 +369,13 @@ class OnPolicyRunner:
         self.alg.actor_critic.load_state_dict(loaded_dict["model_state_dict"])
         if load_optimizer:
             self.alg.optimizer.load_state_dict(loaded_dict["optimizer_state_dict"])
+            self.alg.actor_critic.estimator.optimizer.load_state_dict(
+                loaded_dict["estimator_optimizer_state_dict"]
+            )
         self.current_learning_iteration = loaded_dict["iter"]
         return loaded_dict["infos"]
 
     def get_inference_actions(self):
-        # print(
-        #     "on_policy_runner self.policy_cfg['actor_obs']: ",
-        #     self.policy_cfg["actor_obs"],
-        # )
-        '''
-        self.policy_cfg["actor_obs"]: [
-            "base_height",
-            "base_lin_vel_world",
-            "base_heading",
-            "base_ang_vel",
-            "projected_gravity",
-            "foot_states_right",
-            "foot_states_left",
-            "step_commands_right",
-            "step_commands_left",
-            "commands",
-            "phase_sin",
-            "phase_cos",
-            "dof_pos",
-            "dof_vel",
-        ]
-        '''
-
         obs = self.get_obs(self.policy_cfg["actor_obs"])
         return self.alg.actor_critic.act_inference(obs)
 

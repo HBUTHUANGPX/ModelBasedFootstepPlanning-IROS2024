@@ -29,12 +29,12 @@
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
 import torch
-from .base_storage import BaseStorage
+import numpy as np
+
+from rsl_rl.utils import split_and_pad_trajectories
 
 
-class RolloutStorage(BaseStorage):
-    """A standard rollout storage, implemented for for PPO."""
-
+class HIMRolloutStorage:
     class Transition:
         def __init__(self):
             self.observations = None
@@ -55,38 +55,43 @@ class RolloutStorage(BaseStorage):
         self,
         num_envs,
         num_transitions_per_env,
-        num_obs,
-        num_critic_obs,
-        num_actions,
+        obs_shape,
+        privileged_obs_shape,
+        actions_shape,
         device="cpu",
     ):
 
         self.device = device
 
-        self.num_obs = num_obs
-        self.num_critic_obs = num_critic_obs
-        self.num_actions = num_actions
+        self.obs_shape = obs_shape
+        self.privileged_obs_shape = privileged_obs_shape
+        self.actions_shape = actions_shape
 
         # Core
         self.observations = torch.zeros(
-            num_transitions_per_env, num_envs, num_obs, device=self.device
+            num_transitions_per_env, num_envs, *obs_shape, device=self.device
         )
-        if num_critic_obs is not None:
-            self.critic_observations = torch.zeros(
-                num_transitions_per_env, num_envs, num_critic_obs, device=self.device
+        if privileged_obs_shape[0] is not None:
+            self.privileged_observations = torch.zeros(
+                num_transitions_per_env,
+                num_envs,
+                *privileged_obs_shape,
+                device=self.device
             )
             self.next_privileged_observations = torch.zeros(
-                num_transitions_per_env, num_envs, num_critic_obs, device=self.device
+                num_transitions_per_env,
+                num_envs,
+                *privileged_obs_shape,
+                device=self.device
             )
         else:
-            self.critic_observations = None
+            self.privileged_observations = None
             self.next_privileged_observations = None
-
         self.rewards = torch.zeros(
             num_transitions_per_env, num_envs, 1, device=self.device
         )
         self.actions = torch.zeros(
-            num_transitions_per_env, num_envs, num_actions, device=self.device
+            num_transitions_per_env, num_envs, *actions_shape, device=self.device
         )
         self.dones = torch.zeros(
             num_transitions_per_env, num_envs, 1, device=self.device
@@ -106,42 +111,40 @@ class RolloutStorage(BaseStorage):
             num_transitions_per_env, num_envs, 1, device=self.device
         )
         self.mu = torch.zeros(
-            num_transitions_per_env, num_envs, num_actions, device=self.device
+            num_transitions_per_env, num_envs, *actions_shape, device=self.device
         )
         self.sigma = torch.zeros(
-            num_transitions_per_env, num_envs, num_actions, device=self.device
+            num_transitions_per_env, num_envs, *actions_shape, device=self.device
         )
 
         self.num_transitions_per_env = num_transitions_per_env
         self.num_envs = num_envs
 
-        self.fill_count = 0
+        self.step = 0
 
     def add_transitions(self, transition: Transition):
-        if self.fill_count >= self.num_transitions_per_env:
+        if self.step >= self.num_transitions_per_env:
             raise AssertionError("Rollout buffer overflow")
-        self.observations[self.fill_count].copy_(transition.observations)
-        if self.critic_observations is not None:
-            self.critic_observations[self.fill_count].copy_(
+        self.observations[self.step].copy_(transition.observations)
+        if self.privileged_observations is not None:
+            self.privileged_observations[self.step].copy_(
                 transition.critic_observations
             )
         if self.next_privileged_observations is not None:
-            self.next_privileged_observations[self.fill_count].copy_(
+            self.next_privileged_observations[self.step].copy_(
                 transition.next_critic_observations
             )
-        self.actions[self.fill_count].copy_(transition.actions)
-        self.rewards[self.fill_count].copy_(transition.rewards.view(-1, 1))
-        self.dones[self.fill_count].copy_(transition.dones.view(-1, 1))
-        self.values[self.fill_count].copy_(transition.values)
-        self.actions_log_prob[self.fill_count].copy_(
-            transition.actions_log_prob.view(-1, 1)
-        )
-        self.mu[self.fill_count].copy_(transition.action_mean)
-        self.sigma[self.fill_count].copy_(transition.action_sigma)
-        self.fill_count += 1
+        self.actions[self.step].copy_(transition.actions)
+        self.rewards[self.step].copy_(transition.rewards.view(-1, 1))
+        self.dones[self.step].copy_(transition.dones.view(-1, 1))
+        self.values[self.step].copy_(transition.values)
+        self.actions_log_prob[self.step].copy_(transition.actions_log_prob.view(-1, 1))
+        self.mu[self.step].copy_(transition.action_mean)
+        self.sigma[self.step].copy_(transition.action_sigma)
+        self.step += 1
 
     def clear(self):
-        self.fill_count = 0
+        self.step = 0
 
     def compute_returns(self, last_values, gamma, lam):
         advantage = 0
@@ -186,8 +189,8 @@ class RolloutStorage(BaseStorage):
         )
 
         observations = self.observations.flatten(0, 1)
-        if self.critic_observations is not None:
-            critic_observations = self.critic_observations.flatten(0, 1)
+        if self.privileged_observations is not None:
+            critic_observations = self.privileged_observations.flatten(0, 1)
             next_critic_observations = self.next_privileged_observations.flatten(0, 1)
         else:
             critic_observations = observations
@@ -218,7 +221,7 @@ class RolloutStorage(BaseStorage):
                 advantages_batch = advantages[batch_idx]
                 old_mu_batch = old_mu[batch_idx]
                 old_sigma_batch = old_sigma[batch_idx]
-                yield obs_batch, critic_observations_batch, actions_batch, \
+                yield obs_batch, critic_observations_batch, actions_batch,\
                       next_critic_observations_batch, target_values_batch, \
                       advantages_batch, returns_batch, \
                       old_actions_log_prob_batch, old_mu_batch, old_sigma_batch

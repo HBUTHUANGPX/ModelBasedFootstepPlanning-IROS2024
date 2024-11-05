@@ -139,7 +139,8 @@ class LeggedRobot(BaseTask):
         self._post_physics_step_callback() 
 
         self.check_termination()
-        
+        env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
+        termination_privileged_obs = self.compute_termination_observations(env_ids)
         nact = self.num_actuators
         self.actuation_history[:, 2*nact:] = self.actuation_history[:, nact:2*nact]
         self.actuation_history[:, nact:2*nact] = self.actuation_history[:, :nact]
@@ -149,6 +150,8 @@ class LeggedRobot(BaseTask):
 
         if not self.headless:
             self._visualization()
+
+        return env_ids, termination_privileged_obs
 
 
     def check_termination(self):

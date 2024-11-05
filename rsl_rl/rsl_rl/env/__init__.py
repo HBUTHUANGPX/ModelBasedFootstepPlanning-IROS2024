@@ -26,36 +26,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Copyright (c) 2021 ETH Zurich, Nikita Rudin MIT
+# Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
-from abc import ABC, abstractmethod
-import torch
-from typing import Tuple, Union
-
-# minimal interface of the environment
-class VecEnv(ABC):
-    num_envs: int
-    num_actuators: int
-    num_obs: int
-    num_critic_obs: int
-    num_actions: int
-    max_episode_length: int
-    obs_buf: torch.Tensor 
-    critic_obs_buf: torch.Tensor
-    rew_buf: torch.Tensor
-    reset_buf: torch.Tensor
-    episode_length_buf: torch.Tensor # current episode duration
-    extras: dict
-    device: torch.device
-    @abstractmethod
-    def step(self, actions: torch.Tensor) -> Tuple[torch.Tensor, Union[torch.Tensor, None], torch.Tensor, torch.Tensor, dict]:
-        pass
-    @abstractmethod
-    def reset(self, env_ids: Union[list, torch.Tensor]):
-        pass
-    @abstractmethod
-    def get_observations(self) -> torch.Tensor:
-        pass
-    @abstractmethod
-    def get_critic_observations(self) -> Union[torch.Tensor, None]:
-        pass
+from .vec_env import VecEnv

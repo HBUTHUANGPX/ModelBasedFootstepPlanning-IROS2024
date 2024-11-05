@@ -26,18 +26,18 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Copyright (c) 2021 ETH Zurich, Nikita Rudin MIT
+# Copyright (c) 2021 ETH Zurich, Nikita Rudin HIM
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from learning.modules import ActorCritic
-from learning.storage import RolloutStorage
+from rsl_rl.modules import HIMActorCritic
+from rsl_rl.storage import HIMRolloutStorage
 
 
-class PPO:
-    actor_critic: ActorCritic
+class HIMPPO:
+    actor_critic: HIMActorCritic
 
     def __init__(
         self,
@@ -68,7 +68,7 @@ class PPO:
         self.actor_critic.to(self.device)
         self.storage = None  # initialized later
         self.optimizer = optim.Adam(self.actor_critic.parameters(), lr=learning_rate)
-        self.transition = RolloutStorage.Transition()
+        self.transition = HIMRolloutStorage.Transition()
 
         # PPO parameters
         self.clip_param = clip_param
@@ -82,14 +82,19 @@ class PPO:
         self.use_clipped_value_loss = use_clipped_value_loss
 
     def init_storage(
-        self, num_envs, num_transitions_per_env, num_obs, num_critic_obs, num_actions
+        self,
+        num_envs,
+        num_transitions_per_env,
+        actor_obs_shape,
+        critic_obs_shape,
+        action_shape,
     ):
-        self.storage = RolloutStorage(
+        self.storage = HIMRolloutStorage(
             num_envs,
             num_transitions_per_env,
-            num_obs,
-            num_critic_obs,
-            num_actions,
+            actor_obs_shape,
+            critic_obs_shape,
+            action_shape,
             self.device,
         )
 
@@ -113,20 +118,22 @@ class PPO:
         self.transition.critic_observations = critic_obs
         return self.transition.actions
 
-    def process_env_step(self, rewards, dones, next_critic_obs, timed_out=None):
+    def process_env_step(self, rewards, dones, infos, next_critic_obs):
         self.transition.next_critic_observations = next_critic_obs.clone()
         self.transition.rewards = rewards.clone()
         self.transition.dones = dones
-
         # Bootstrapping on time outs
-        if timed_out is not None:
+        if "time_outs" in infos:
             self.transition.rewards += self.gamma * torch.squeeze(
-                self.transition.values * timed_out.unsqueeze(1), 1
+                self.transition.values
+                * infos["time_outs"].unsqueeze(1).to(self.device),
+                1,
             )
 
         # Record the transition
         self.storage.add_transitions(self.transition)
         self.transition.clear()
+        self.actor_critic.reset(dones)
 
     def compute_returns(self, last_critic_obs):
         last_values = self.actor_critic.evaluate(last_critic_obs).detach()
@@ -141,6 +148,7 @@ class PPO:
         generator = self.storage.mini_batch_generator(
             self.num_mini_batches, self.num_learning_epochs
         )
+
         for (
             obs_batch,
             critic_obs_batch,
